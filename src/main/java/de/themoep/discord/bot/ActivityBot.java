@@ -205,8 +205,16 @@ public class ActivityBot {
     }
 
     private boolean applies(ActivityConfig activity) {
+        for (String s : activity.getSource().split("&")) {
+            if (!applyCheck(s)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean applyCheck(String source) {
         boolean retMatches = true;
-        String source = activity.getSource();
         if (source.startsWith("!")) {
             source = source.substring(1);
             retMatches = false;
@@ -238,6 +246,24 @@ public class ActivityBot {
                     return hour == endTime;
                 } catch (NumberFormatException e) {
                     log(Level.SEVERE, "Unable to parse time from " + source, e);
+                }
+            }
+        } else if (source.startsWith("dow:")) {
+            String[] days = source.substring("dow:".length()).split(",");
+            for (String dayString : days) {
+                try {
+                    int day = Integer.parseInt(dayString);
+
+                    int dow = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1;
+                    if (dow < 1) {
+                        dow += 7;
+                    }
+
+                    if (day == dow) {
+                        return true;
+                    }
+                } catch (NumberFormatException e) {
+                    log(Level.SEVERE, "Unable to parse dow from " + source, e);
                 }
             }
         } else {
